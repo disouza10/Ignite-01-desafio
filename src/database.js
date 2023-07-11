@@ -54,6 +54,22 @@ export class Database {
       this.#database[table][rowIndex] = { id, ...data }
 
       this.#persist()
+    } else {
+      return 'not_found'
+    }
+  }
+
+  complete(table, id, completed_at) {
+    // TODO: remover esse método e colocar essa lógica dentro do update
+    const rowIndex = this.#database[table].findIndex(row => row.id === id)
+
+    if (rowIndex > -1) {
+      const completed = this.#database[table][rowIndex]['completed_at'] ? null : completed_at
+      this.#database[table][rowIndex]['completed_at'] = completed
+
+      this.#persist()
+    } else {
+      return 'not_found'
     }
   }
 
@@ -65,7 +81,7 @@ export class Database {
 
       this.#persist()
     } else {
-      return 'error'
+      return 'not_found'
     }
   }
 }

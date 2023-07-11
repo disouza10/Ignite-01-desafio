@@ -60,14 +60,14 @@ export const routes = [
     path: buildRoutePath('/tasks/:id/complete'),
     handler: (req, res) => {
       const { id } = req.params
-      const { name, email } = req.body
 
-      database.update('tasks', id, {
-        name,
-        email
-      })
+      const completeAction = database.complete('tasks', id, new Date())
 
-      return res.writeHead(204).end()
+      if (completeAction === 'not_found') {
+        return res.writeHead(422).end(JSON.stringify('Id not found in database'))
+      } else {
+        return res.writeHead(204).end()
+      }
     }
   },
   {
@@ -78,7 +78,7 @@ export const routes = [
 
       const deleteAction = database.delete('tasks', id)
 
-      if (deleteAction === 'error') {
+      if (deleteAction === 'not_found') {
         return res.writeHead(422).end(JSON.stringify('Id not found in database'))
       } else {
         return res.writeHead(204).end()
