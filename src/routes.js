@@ -10,7 +10,7 @@ export const routes = [
     path: buildRoutePath('/tasks'),
     handler: (req, res) => {
       let { title, description } = req.query
-      title = title ? title : null,
+      title = title ? title : null
       description = description ? description : null
 
       const tasks = database.select('tasks', title || description ? {
@@ -26,18 +26,23 @@ export const routes = [
     path: buildRoutePath('/tasks'),
     handler: (req, res) => {
       const { title, description } = req.body
-      const task = {
-        id: randomUUID(),
-        title,
-        description,
-        completed_at: null,
-        created_at: new Date(),
-        updated_at: new Date()
+
+      if ([title, description].some((el) => el == null)) {
+        return res.writeHead(422).end(JSON.stringify('There must be a title and a description'))
+      } else {
+        const task = {
+          id: randomUUID(),
+          title,
+          description,
+          completed_at: null,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+
+        database.insert('tasks', task)
+
+        return res.writeHead(201).end()
       }
-
-      database.insert('tasks', task)
-
-      return res.writeHead(201).end()
     }
   },
   {
@@ -45,14 +50,18 @@ export const routes = [
     path: buildRoutePath('/tasks/:id'),
     handler: (req, res) => {
       const { id } = req.params
-      const { name, email } = req.body
+      const { title, description } = req.body
 
-      database.update('tasks', id, {
-        name,
-        email
+      const updateAction = database.update('tasks', id, null, {
+        title: title,
+        description: description,
       })
 
-      return res.writeHead(204).end()
+      if (updateAction === 'not_found') {
+        return res.writeHead(422).end(JSON.stringify('Id not found in database'))
+      } else {
+        return res.writeHead(204).end()
+      }
     }
   },
   {
@@ -61,9 +70,9 @@ export const routes = [
     handler: (req, res) => {
       const { id } = req.params
 
-      const completeAction = database.complete('tasks', id, new Date())
+      const updateAction = database.update('tasks', id, new Date(), null)
 
-      if (completeAction === 'not_found') {
+      if (updateAction === 'not_found') {
         return res.writeHead(422).end(JSON.stringify('Id not found in database'))
       } else {
         return res.writeHead(204).end()

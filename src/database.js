@@ -47,25 +47,20 @@ export class Database {
     return data
   }
 
-  update(table, id, data) {
+  update(table, id, completed_at, data) {
     const rowIndex = this.#database[table].findIndex(row => row.id === id)
 
     if (rowIndex > -1) {
-      this.#database[table][rowIndex] = { id, ...data }
-
-      this.#persist()
-    } else {
-      return 'not_found'
-    }
-  }
-
-  complete(table, id, completed_at) {
-    // TODO: remover esse método e colocar essa lógica dentro do update
-    const rowIndex = this.#database[table].findIndex(row => row.id === id)
-
-    if (rowIndex > -1) {
-      const completed = this.#database[table][rowIndex]['completed_at'] ? null : completed_at
-      this.#database[table][rowIndex]['completed_at'] = completed
+      if (completed_at) {
+        const completed = this.#database[table][rowIndex]['completed_at'] ? null : completed_at
+        this.#database[table][rowIndex]['completed_at'] = completed
+      } else {
+        Object.entries(data).forEach(([key, value]) => {
+          if (value) {
+            this.#database[table][rowIndex][key] = value
+          }
+        })
+      }
 
       this.#persist()
     } else {
