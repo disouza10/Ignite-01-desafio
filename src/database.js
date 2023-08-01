@@ -1,4 +1,6 @@
 import fs from 'fs/promises'
+import { processCsv } from './process_csv.js'
+import { randomUUID } from 'node:crypto'
 
 const databasePath = new URL('../db.json', import.meta.url)
 
@@ -6,14 +8,21 @@ export class Database {
   #database = {}
 
   constructor() {
-    fs.readFile(databasePath, 'utf8')
+    processCsv()
       .then(data => {
-        this.#database = JSON.parse(data)
+        data.forEach ((item) => {
+          const task = {
+            id: randomUUID(),
+            title: item.title,
+            description: item.description,
+            completed_at: null,
+            created_at: new Date(),
+            updated_at: new Date()
+          }
+          this.insert('tasks', task)
+        })
       })
-      .catch(() => {
-        this.#persist()
-      })
-  }
+    }
 
   #persist() {
     fs.writeFile(databasePath, JSON.stringify(this.#database))
