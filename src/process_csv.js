@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { parse } from 'csv-parse'
 
-export async function processCsv() {
+async function processCsv() {
   const records = []
   const rootPath = new URL('..', import.meta.url).pathname
 
@@ -13,8 +13,21 @@ export async function processCsv() {
     }))
 
   for await (const record of parser) {
-    records.push(record)
-  }
+    const title = record.title
+    const description = record.description
 
-  return records
+    await fetch('http://localhost:3333/tasks', {
+      method: 'POST',
+      body: JSON.stringify({
+        title,
+        description
+      }),
+      headers: {
+        'Content-type': 'application/json; charset=UTF-8',
+      }
+    })
+      .then((response) => console.log(response.json()))
+  }
 }
+
+processCsv()
